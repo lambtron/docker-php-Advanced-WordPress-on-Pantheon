@@ -14,6 +14,11 @@ RUN \
 	echo -e "\nInstalling rsync..." && \
 	apt-get install -y rsync
 
+# Install jq
+RUN \
+	echo -e "\nInstalling jq..." && \
+	apt-get install -y jq
+
 # Install ssh
 RUN \
 	echo -e "\nInstalling ssh..." && \

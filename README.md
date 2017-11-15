@@ -6,6 +6,7 @@ A PHP Docker image for use with Continuous Integration services deploying to [Pa
 * Composer
 * Terminus `1.x`
 * rsync
+* jq
 * wget
 * ssh
 * hirak/prestissimo
