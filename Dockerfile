@@ -9,6 +9,11 @@ RUN \
 	echo -e "\nInstalling wget..." && \
 	apt-get install -y wget
 
+# Install openssl
+RUN \
+	echo -e "\nInstalling openssl..." && \
+	apt-get install -y openssl
+
 # Install rsync
 RUN \
 	echo -e "\nInstalling rsync..." && \

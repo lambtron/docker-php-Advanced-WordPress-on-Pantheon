@@ -8,6 +8,7 @@ A PHP Docker image for use with Continuous Integration services deploying to [Pa
 * rsync
 * jq
 * wget
+* openssl
 * ssh
 * hirak/prestissimo
 * pantheon-systems/terminus-build-tools-plugin
