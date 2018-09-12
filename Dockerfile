@@ -1,5 +1,5 @@
-# Start with PHP 7.1
-FROM drupalci/php-7.1-apache:production
+# Start with PHP 7.2
+FROM drupalci/php-7.2-apache:production
 
 # Update
 RUN apt-get update 
