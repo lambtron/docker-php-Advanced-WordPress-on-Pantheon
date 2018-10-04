@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM devwithlando/php:7.2-fpm
 
 ENV DISPLAY=:99 \
     DBUS_SESSION_BUS_ADDRESS=/dev/null
