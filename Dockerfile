@@ -1,73 +1,52 @@
-# Start with PHP 7.2
-FROM drupalci/php-7.2-apache:production
+FROM php:7.2-fpm
 
-# Update
-RUN apt-get update 
+ENV DISPLAY=:99 \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null
 
-# Install wget
-RUN \
-	echo -e "\nInstalling wget..." && \
-	apt-get install -y wget
+RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /usr/local/etc/php-fpm.conf \
+ && sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i -e "s/pm.max_children = 5/pm.max_children = 9/g" /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i -e "s/pm.start_servers = 2/pm.start_servers = 3/g" /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 2/g" /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 4/g" /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" /usr/local/etc/php-fpm.d/www.conf
 
-# Install openssl
-RUN \
-	echo -e "\nInstalling openssl..." && \
-	apt-get install -y openssl
+RUN apt-get update -qqy \
+  && apt-get -qqy install wget ca-certificates apt-transport-https nginx supervisor ttf-wqy-zenhei fonts-unfonts-core \
+    unzip git x11vnc xfonts-100dpi xfonts-75dpi xfonts-cyrillic xfonts-scalable xvfb libpng-dev libjpeg-dev gnupg \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-# Install rsync
-RUN \
-	echo -e "\nInstalling rsync..." && \
-	apt-get install -y rsync
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update -qqy \
+  && apt-get -qqy install google-chrome-stable google-chrome-unstable chromium google-chrome-beta \
+  && rm /etc/apt/sources.list.d/google-chrome.list \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-# Install jq
-RUN \
-	echo -e "\nInstalling jq..." && \
-	apt-get install -y jq
+RUN docker-php-ext-install gd
 
-# Install ssh
-RUN \
-	echo -e "\nInstalling ssh..." && \
-	apt-get install -y openssh-client
+RUN useradd headless --shell /bin/bash --create-home \
+  && usermod -a -G sudo headless \
+  && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers \
+  && echo 'headless:nopassword' | chpasswd
 
-# Install Terminus
-RUN \
-	echo -e "\nInstalling Terminus 1.x..." && \
-	/usr/bin/env COMPOSER_BIN_DIR=$HOME/bin composer --working-dir=$HOME require pantheon-systems/terminus "^1"
+RUN mkdir /data
 
-# Enable Composer parallel downloads
-RUN \
-	echo -e "\nInstalling hirak/prestissimo for parallel Composer downloads..." && \
-	composer global require -n "hirak/prestissimo:^0.3"
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+ && rm -rf /etc/nginx/sites-enabled/default \
+ && mkdir -p /root/.ssh \
+ && echo "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
 
-# Install Terminus plugins
-RUN \
-	echo -e "\nInstalling Terminus plugins..." && \
-	mkdir -p $HOME/.terminus/plugins && \
-	composer create-project -n -d $HOME/.terminus/plugins pantheon-systems/terminus-build-tools-plugin:dev-master && \
-	composer create-project -n -d $HOME/.terminus/plugins pantheon-systems/terminus-secrets-plugin:^1
+VOLUME /code
 
-# Headless Chrome
-# See https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker
+WORKDIR /code
 
-# See https://crbug.com/795759
-RUN apt-get update && apt-get install -yq libgconf-2-4
+COPY files/supervisord.conf /etc/supervisord.conf
 
-# Install latest chrome dev package and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
-# Note: this installs the necessary libs to make the bundled version of Chromium that Puppeteer
-# installs, work.
-RUN apt-get update && apt-get install -y wget --no-install-recommends \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && apt-get update \
-    && apt-get install -y google-chrome-unstable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst ttf-freefont \
-      --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get purge --auto-remove -y curl \
-    && rm -rf /src/*.deb
+COPY files/entrypoint.sh /entrypoint.sh
 
-# It's a good idea to use dumb-init to help prevent zombie chrome processes.
-ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 /usr/local/bin/dumb-init
-RUN chmod +x /usr/local/bin/dumb-init
+COPY files/vhost.conf /etc/nginx/sites-enabled/vhost.conf
 
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["google-chrome-unstable"]
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["bash"]
