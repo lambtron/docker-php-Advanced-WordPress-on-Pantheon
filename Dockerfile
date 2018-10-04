@@ -1,5 +1,5 @@
 # Start with PHP 7.2
-FROM drupalci/php-7.2-apache:production
+FROM devwithlando/php:7.2-fpm
 
 # Update
 RUN apt-get update 
