@@ -31,8 +31,8 @@ RUN \
 
 # Install Terminus
 RUN \
-	echo -e "\nInstalling Terminus 1.x..." && \
-	/usr/bin/env COMPOSER_BIN_DIR=$HOME/bin composer --working-dir=$HOME require pantheon-systems/terminus "^1"
+	echo -e "\nInstalling Terminus 2.x..." && \
+	/usr/bin/env COMPOSER_BIN_DIR=$HOME/bin composer --working-dir=$HOME require pantheon-systems/terminus "^2"
 
 # Enable Composer parallel downloads
 RUN \
