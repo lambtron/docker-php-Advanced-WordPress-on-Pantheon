@@ -1,5 +1,5 @@
-# Start with PHP 7.2
-FROM drupalci/php-7.2-apache:production
+# Start with PHP and Terminus
+FROM quay.io/pantheon-public/build-tools-ci:4.x
 
 # Update
 RUN apt-get update 
@@ -28,20 +28,3 @@ RUN \
 RUN \
 	echo -e "\nInstalling ssh..." && \
 	apt-get install -y openssh-client
-
-# Install Terminus
-RUN \
-	echo -e "\nInstalling Terminus 1.x..." && \
-	/usr/bin/env COMPOSER_BIN_DIR=$HOME/bin composer --working-dir=$HOME require pantheon-systems/terminus "^1"
-
-# Enable Composer parallel downloads
-RUN \
-	echo -e "\nInstalling hirak/prestissimo for parallel Composer downloads..." && \
-	composer global require -n "hirak/prestissimo:^0.3"
-
-# Install Terminus plugins
-RUN \
-	echo -e "\nInstalling Terminus plugins..." && \
-	mkdir -p $HOME/.terminus/plugins && \
-	composer create-project -n -d $HOME/.terminus/plugins pantheon-systems/terminus-build-tools-plugin:dev-master && \
-	composer create-project -n -d $HOME/.terminus/plugins pantheon-systems/terminus-secrets-plugin:^1
