@@ -2,9 +2,9 @@
 A PHP Docker image for use with Continuous Integration services deploying to [Pantheon](https://pantheon.io/)
 
 ## Includes
-* PHP `7.1`
+* PHP `7.2`
 * Composer
-* Terminus `1.x`
+* Terminus `2.x`
 * rsync
 * jq
 * wget
