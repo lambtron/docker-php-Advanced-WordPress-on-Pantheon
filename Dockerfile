@@ -1,5 +1,5 @@
 # Start with Drupal Docker
-FROM drupaldocker/php:7.2-cli
+FROM drupaldocker/php:7.3-cli
 
 # Update
 RUN apt-get update 
